@@ -1,0 +1,18 @@
+{
+    "token_hmac_secret_key": "915c6031-91c8-4a8d-afd5-f6d1f090d144",
+    "admin_password": "dd6a4dcd-7a00-4431-83ef-0c7682db17d9",
+    "admin_secret": "5b4b4962-47d3-4147-a998-1cd464251d93",
+    "api_key": "6909b7db-9b10-46ae-a826-51618eb61b85",
+    "admin": true,
+    "log_level": "debug",
+    "anonymous": true,
+    "publish": true,
+    "subscribe_to_publish": true,
+    "presence": true,
+    "join_leave": true,
+    "history_size": 10,
+    "history_lifetime": 300,
+    "history_recover": true,
+    "port": 9099,
+    "client_insecure": true
+  }
