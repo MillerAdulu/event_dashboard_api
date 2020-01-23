@@ -8,9 +8,8 @@ import (
 
 	"github.com/MillerAdulu/dashboard/entities"
 
-	"github.com/MillerAdulu/dashboard/v1/ally"
+	"github.com/MillerAdulu/dashboard/v1/user"
 	"github.com/centrifugal/gocent"
-	ms "github.com/mitchellh/mapstructure"
 )
 
 type allyUcase struct {
@@ -19,7 +18,7 @@ type allyUcase struct {
 }
 
 // NewUsecase -
-func NewUsecase(cent *gocent.Client, t time.Duration) ally.Usecase {
+func NewUsecase(cent *gocent.Client, t time.Duration) user.Usecase {
 	return &allyUcase{
 		Cent: cent,
 		tOut: t,
@@ -27,31 +26,29 @@ func NewUsecase(cent *gocent.Client, t time.Duration) ally.Usecase {
 }
 
 // RegisterAlly - Update statistics for user registrations
-func (aU *allyUcase) RegisterAlly(ctx context.Context, ally map[string]interface{}) {
+func (aU *allyUcase) RegisterUser(ctx context.Context, user entities.UserRegistrationData) {
 	var err error
-	var a entities.UserRegistration
 	ch := "registration"
 
 	ctx, cancel := context.WithTimeout(ctx, aU.tOut)
 	defer cancel()
 
-	ms.Decode(ally, &a)
-
 	// TODO: Insert data in `a` to RethinkDB
 
 	// Publish data to centrifuge
-	data, _ := json.Marshal(a)
-
+	data, err := json.Marshal(user)
 	if err != nil {
-		log.Fatalf("Error marshaling:  %v", a)
+		log.Fatalf("Error marshaling:  %v", user)
 	}
 
 	err = aU.Cent.Publish(ctx, ch, data)
 
 	if err != nil {
-		log.Fatalf("Error calling publish: %v", err)
+		log.Printf("Error calling publish: %v", err)
 	}
 
 	log.Printf("Successfully published to: %v", ch)
 
 }
+
+func (aU *allyUcase) DeleteUser(ctx context.Context, userID int) {}

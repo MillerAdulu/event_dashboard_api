@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	allyMqtt "github.com/MillerAdulu/dashboard/v1/ally/mqtt"
-	_allyUsecase "github.com/MillerAdulu/dashboard/v1/ally/usecase"
+	userMqtt "github.com/MillerAdulu/dashboard/v1/user/mqtt"
+	_userUsecase "github.com/MillerAdulu/dashboard/v1/user/usecase"
 	"github.com/centrifugal/gocent"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -58,22 +58,22 @@ func main() {
 	// Clients
 
 	// MQTT Client
-	mC := connect("dashboard", mqttURI)
+	mC := connect("dashboard_golang", mqttURI)
 
 	// Repositories
 
 	// Usecases
-	allyUsecase := _allyUsecase.NewUsecase(centrifuge, tOut)
+	allyUsecase := _userUsecase.NewUsecase(centrifuge, tOut)
 
-	// Deliveries
-	_aDel := allyMqtt.NewDelivery(&mC, allyUsecase)
+	// Handlers
+	_aDel := userMqtt.NewDelivery(&mC, allyUsecase)
 
 	// MQTT Subscriptions
 	wg.Add(1)
 	go listen(mC, "topics/client/57475/presence", _aDel.Presence)
 
 	wg.Add(1)
-	go listen(mC, "topics/client/57475", _aDel.Global)
+	go listen(mC, "topics/client/57475/registration", _aDel.Registration)
 
 	wg.Wait()
 

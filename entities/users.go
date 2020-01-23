@@ -1,7 +1,7 @@
 package entities
 
-// UserRegistration -
-type UserRegistration struct {
+// UserRegistrationData -
+type UserRegistrationData struct {
 	Name   string  `json:"name"`
 	Number float64 `json:"number"`
 }
