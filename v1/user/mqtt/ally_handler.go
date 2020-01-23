@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/MillerAdulu/dashboard/utils"
+
 	"github.com/MillerAdulu/dashboard/entities"
 
 	"github.com/MillerAdulu/dashboard/v1/user"
@@ -36,7 +38,9 @@ func (aM *AllyHandler) Registration(c mqtt.Client, msg mqtt.Message) {
 	var a entities.UserRegistrationData
 	ctx := context.Background()
 
-	ms.Decode(msg.Payload(), &a)
+	user := utils.Unwrap(msg.Payload())
+
+	ms.Decode(user, &a)
 
 	aM.AUcase.RegisterUser(ctx, a)
 
