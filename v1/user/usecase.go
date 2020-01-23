@@ -1,8 +1,8 @@
 package user
 
 import (
-	"github.com/MillerAdulu/dashboard/entities"
 	"context"
+	"github.com/MillerAdulu/dashboard/entities"
 )
 
 // Usecase -

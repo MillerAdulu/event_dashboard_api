@@ -12,4 +12,5 @@ require (
 	github.com/mitchellh/mapstructure v1.1.2
 	github.com/valyala/fasttemplate v1.1.0 // indirect
 	golang.org/x/crypto v0.0.0-20200115085410-6d4e4cb37c7d // indirect
+	gopkg.in/rethinkdb/rethinkdb-go.v6 v6.0.0
 )

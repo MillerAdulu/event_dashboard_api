@@ -13,15 +13,17 @@ import (
 )
 
 type allyUcase struct {
-	Cent *gocent.Client
-	tOut time.Duration
+	Cent  *gocent.Client
+	URepo user.Repository
+	tOut  time.Duration
 }
 
 // NewUsecase -
-func NewUsecase(cent *gocent.Client, t time.Duration) user.Usecase {
+func NewUsecase(cent *gocent.Client, uR user.Repository, t time.Duration) user.Usecase {
 	return &allyUcase{
-		Cent: cent,
-		tOut: t,
+		Cent:  cent,
+		URepo: uR,
+		tOut:  t,
 	}
 }
 
@@ -34,6 +36,8 @@ func (aU *allyUcase) RegisterUser(ctx context.Context, user entities.UserRegistr
 	defer cancel()
 
 	// TODO: Insert data in `a` to RethinkDB
+
+	aU.URepo.RegisterUser(user)
 
 	// Publish data to centrifuge
 	data, err := json.Marshal(user)

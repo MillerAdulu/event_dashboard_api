@@ -8,9 +8,11 @@ import (
 	"time"
 
 	userMqtt "github.com/MillerAdulu/dashboard/v1/user/mqtt"
+	_userRepository "github.com/MillerAdulu/dashboard/v1/user/repository"
 	_userUsecase "github.com/MillerAdulu/dashboard/v1/user/usecase"
 	"github.com/centrifugal/gocent"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	r "gopkg.in/rethinkdb/rethinkdb-go.v6"
 )
 
 var (
@@ -54,16 +56,34 @@ func listen(client mqtt.Client, topic string, handler mqtt.MessageHandler) {
 	wg.Done()
 }
 
+func rethinkConnect() *r.Session {
+	s, err := r.Connect(r.ConnectOpts{
+		Address:  "",
+		Database: "",
+		Username: "",
+		Password: "",
+		AuthKey:  "",
+	})
+
+	if err != nil {
+		log.Printf("Query not....: %v", err)
+	}
+	return s
+}
+
 func main() {
 	// Clients
 
 	// MQTT Client
 	mC := connect("dashboard_golang", mqttURI)
+	// Rethink Connection
+	rC := rethinkConnect()
 
 	// Repositories
+	userRepo := _userRepository.NewUserRepository(rC)
 
 	// Usecases
-	allyUsecase := _userUsecase.NewUsecase(centrifuge, tOut)
+	allyUsecase := _userUsecase.NewUsecase(centrifuge, userRepo, tOut)
 
 	// Handlers
 	_aDel := userMqtt.NewDelivery(&mC, allyUsecase)
