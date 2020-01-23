@@ -76,6 +76,7 @@ func main() {
 
 	// MQTT Client
 	mC := connect("dashboard_golang", mqttURI)
+
 	// Rethink Connection
 	rC := rethinkConnect()
 
