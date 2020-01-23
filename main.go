@@ -1,60 +1,82 @@
 package main
 
 import (
+	"fmt"
 	"log"
-	"os"
-	"os/signal"
+	"net/url"
+	"sync"
+	"time"
 
-	"github.com/MillerAdulu/dashboard/utils/websocket"
-	_socketHandler "github.com/MillerAdulu/dashboard/v1/websocket"
+	allyMqtt "github.com/MillerAdulu/dashboard/v1/ally/mqtt"
+	_allyUsecase "github.com/MillerAdulu/dashboard/v1/ally/usecase"
+	"github.com/centrifugal/gocent"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
+var (
+	centrifuge = gocent.New(gocent.Config{
+		Addr: "http://localhost:9099",
+		Key:  "6909b7db-9b10-46ae-a826-51618eb61b85",
+	})
+
+	tOut = time.Duration(10) * time.Second
+
+	mqttURI, _ = url.Parse("http://134.209.20.138:4117/")
+)
+
+var wg sync.WaitGroup
+
+func connect(clientID string, uri *url.URL) mqtt.Client {
+	opts := createClientOptions(clientID, uri)
+	client := mqtt.NewClient(opts)
+	token := client.Connect()
+	for !token.WaitTimeout(3 * time.Second) {
+	}
+	if err := token.Error(); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Token: %v\n", token)
+	return client
+}
+
+func createClientOptions(clientID string, uri *url.URL) *mqtt.ClientOptions {
+	opts := mqtt.NewClientOptions()
+	opts.AddBroker(fmt.Sprintf("tcp://%s", uri.Host))
+	// opts.SetUsername(uri.User.Username())
+	// password, _ := uri.User.Password()
+	// opts.SetPassword(password)
+	opts.SetClientID(clientID)
+	return opts
+}
+
+func listen(client mqtt.Client, topic string, handler mqtt.MessageHandler) {
+	client.Subscribe(topic, 0, handler)
+	wg.Done()
+}
+
 func main() {
+	// Clients
 
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
+	// MQTT Client
+	mC := connect("dashboard", mqttURI)
 
-	socket := websocket.New("ws://0.0.0.0:0/socket")
+	// Repositories
 
-	socket.OnConnected = func(socket websocket.Socket) {
-		log.Println("Connected to server")
-	}
+	// Usecases
+	allyUsecase := _allyUsecase.NewUsecase(centrifuge, tOut)
 
-	socket.OnConnectError = func(err error, socket websocket.Socket) {
-		log.Println("Received connect error ", err)
-	}
+	// Deliveries
+	_aDel := allyMqtt.NewDelivery(&mC, allyUsecase)
 
-	socket.OnTextMessage = func(message string, socket websocket.Socket) {
-		log.Println("Received message " + message)
-		_socketHandler.SocketDataHandler(message)
-	}
+	// MQTT Subscriptions
+	wg.Add(1)
+	go listen(mC, "topics/client/57475/presence", _aDel.Presence)
 
-	socket.OnBinaryMessage = func(data []byte, socket websocket.Socket) {
-		log.Println("Received binary data ", data)
-	}
+	wg.Add(1)
+	go listen(mC, "topics/client/57475", _aDel.Global)
 
-	socket.OnPingReceived = func(data string, socket websocket.Socket) {
-		log.Println("Received ping " + data)
-	}
-
-	socket.OnPongReceived = func(data string, socket websocket.Socket) {
-		log.Println("Received pong " + data)
-	}
-
-	socket.OnDisconnected = func(err error, socket websocket.Socket) {
-		log.Println("Disconnected from server ")
-		return
-	}
-
-	socket.Connect()
+	wg.Wait()
 
 	for {
-		select {
-		case <-interrupt:
-			log.Println("interrupt")
-			socket.Close()
-			return
-		}
 	}
-
 }
